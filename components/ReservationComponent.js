@@ -26,6 +26,7 @@ class Reservation extends Component {
 
     handleReservation() {
         console.log(JSON.stringify(this.state));
+        this.addReservationToCalendar(this.state.date);
         this.toggleModal();
     }
 
@@ -58,6 +59,19 @@ class Reservation extends Component {
         );
     }
 
+    async obtainCalendarPermission() {
+        let permission = await Permissions.getAsync(Permissions.CALENDAR);
+        if (permission.status !== 'granted') {
+            permission = await Permissions.askAsync(Permissions.CALENDAR);
+
+            if (permission.status !== 'granted') {
+                Alert.alert('Permission not granted for calendar');
+            }
+        }
+        console.log("Permission status: " + permission.status);
+        return permission;
+    }
+
     async obtainNotificationPermission() {
         let permission = await Permissions.getAsync(Permissions.USER_FACING_NOTIFICATIONS);
         if (permission.status !== 'granted') {
@@ -84,6 +98,25 @@ class Reservation extends Component {
                 vibrate: true,
                 color: '#512DA8'
             }
+        });
+    }
+
+    async addReservationToCalendar(date) {
+        await this.obtainCalendarPermission();
+        let twoHours = 2*60*60*1000;
+
+        let event = await Expo.Calendar.createEventAsync(Expo.Calendar.DEFAULT,{
+            startDate: new Date(Date.parse(date)),
+            endDate: new Date(Date.parse(date) + twoHours),
+            title: "Con Fusion Table Reservation",
+            timeZone: "Asia/Hong_Kong",
+            location: '121, Clear Water Bay Road, Clear Water Bay, Kowloon, Hong Kong'
+        })
+        .then( event => {
+            console.log('success',event);
+        })
+        .catch( error => {
+            console.log('failure',error);
         });
     }
     
